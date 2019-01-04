@@ -4,6 +4,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 
+/**
+ * A class to manage how suggested words are generated. The keyboard name as a
+ * class doesn't actually help at all. It's better described as a word
+ * generating function. Throws a FileNotFoundException in the case that the file
+ * used as the dictionary cannot be found.
+ * 
+ * @author KK
+ *
+ */
 public class Keyboard {
 
 	ArrayList<Neighbor> perm;
@@ -11,6 +20,16 @@ public class Keyboard {
 	HashSet<String> suggested;
 	String currentWord;
 
+	/**
+	 * The only constructor that is meant to be used. Sets up all of the appropriate
+	 * resources necessary to generate other possible words. Also sets up a
+	 * dictionary for future use.
+	 * 
+	 * @param input The word that should be prepared to find other words that may or
+	 *              may not be a match.
+	 * @throws FileNotFoundException In case that someone tampers with the file that
+	 *                               is meant to be the dictionary.
+	 */
 	public Keyboard(String input) throws FileNotFoundException {
 		currentWord = input;
 		perm = new ArrayList<Neighbor>();
@@ -27,7 +46,47 @@ public class Keyboard {
 
 	}
 
-	public String recommend() {
+	/**
+	 * A public method that is meant to generate all possible words. Will return the
+	 * best possible recommendation as a String.
+	 * 
+	 * @return A valid word in the dictionary that is meant to represent the best
+	 *         possible match to what the user may have meant.
+	 */
+	public String generateWords() {
+		generateWords(perm, "");
+		return recommend();
+	}
+
+	private void generateWords(ArrayList<Neighbor> spot, String soFar) {
+		if (spot.isEmpty()) {
+			if (dictionary.contains(soFar)) {
+				suggested.add(soFar);
+			}
+		} else {
+			Neighbor temp = spot.remove(0);
+			spot.add(0, temp);
+			ArrayList<Character> currentLetter = temp.getReplace();
+			for (char current : currentLetter) {
+				spot.remove(0);
+				generateWords(spot, soFar + current);
+				spot.add(0, temp);
+
+			}
+		}
+	}
+
+	/**
+	 * A private method. Finds and returns a String that is the best match for what
+	 * the word might be. If the input word is already a valid word, it will just
+	 * return the input word. If not, it determines what the best match is by
+	 * checking for the number of characters that have to be changed in order to
+	 * create a valid word.
+	 * 
+	 * @return The closest valid word, determined by the number of characters that
+	 *         need to be changed from the input word.
+	 */
+	private String recommend() {
 		int different = currentWord.length();
 		String toReturn = null;
 		int temp = 0;
@@ -52,29 +111,15 @@ public class Keyboard {
 		}
 	}
 
-	public String generateWords() {
-		generateWords(perm, "");
-		return recommend();
-	}
-
-	private void generateWords(ArrayList<Neighbor> spot, String soFar) {
-		if (spot.isEmpty()) {
-			if (dictionary.contains(soFar)) {
-				suggested.add(soFar);
-			}
-		} else {
-			Neighbor temp = spot.remove(0);
-			spot.add(0, temp);
-			ArrayList<Character> currentLetter = temp.getReplace();
-			for (char current : currentLetter) {
-				spot.remove(0);
-				generateWords(spot, soFar + current);
-				spot.add(0, temp);
-
-			}
-		}
-	}
-
+	/**
+	 * Used to set up Neighbor classes that have the appropriate "neighbor"
+	 * characters, which are characters that are around each letter in a QUERTY
+	 * keyboard.
+	 * 
+	 * @param ind The letter being evaluated.
+	 * @return A neighbor class that represents all of the other letters the user
+	 *         may have pressed.
+	 */
 	private Neighbor getNeighbor(Character ind) {
 		Neighbor toReturn = null;
 
